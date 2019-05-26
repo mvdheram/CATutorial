@@ -22,8 +22,7 @@ from   matplotlib import pyplot as plt
 
 dataset = pd.read_csv('claim_stance_dataset_v1.csv')
 
-#X_train, X_test, y_train, y_test = train_test_split(claim_data ,claim_data_class , test_size=0.33, random_state=42)
-#split traning and test data
+
 train =[]
 test = []
 for index, row in dataset.iterrows():
@@ -60,7 +59,22 @@ def sentiment_analyzer_scores(sentence):
     analyser = SentimentIntensityAnalyzer()
     score = analyser.polarity_scores(sentence)
     #print("{:-<40} {}".format(sentence, str(score)))
-    premise_words = nltk.word_tokenize(sentence)
+    if score['compound'] >= 0.05 : 
+        print("Positive") 
+        stance = +1
+        print("stance",stance)
+  
+    elif score['compound'] <= - 0.05 : 
+        print("Negative") 
+        stance = -1
+        print("stance",stance)
+    else : 
+        print("Neutral")
+    return  score['neg'],score['neu'],score['pos'],score['compound']
+
+def _sentiment_features(premise):
+    analyser = SentimentIntensityAnalyzer()
+    premise_words = nltk.word_tokenize(premise)
     num_of_positive_words = 0
     num_of_negative_words = 0
     num_of_neutral_words  = 0
@@ -71,38 +85,8 @@ def sentiment_analyzer_scores(sentence):
             num_of_positive_words +=1
         if analyser.polarity_scores(word)['neu'] > 0:
             num_of_neutral_words+=1
-    #if score['compound'] >= 0.05 : 
-       # print("Positive") 
-        #stance = +1
-        #print("stance",stance)
-  
-    #elif score['compound'] <= - 0.05 : 
-        #print("Negative") 
-       # stance = -1
-        #print("stance",stance)
-    #else : 
-        #print("Neutral")
-    return  score['neg'],score['neu'],score['pos'],score['compound'],num_of_positive_words,num_of_negative_words,num_of_neutral_words
-# =============================================================================
-# def _sentiment_features(premise):
-#     premise_words = nltk.word_tokenize(premise)
-#     num_of_positive_words = 0
-#     num_of_negative_words = 0
-#     num_of_neutral_words  = 0
-#     for word in premise_words:
-#         synsets = list(swn.senti_synsets(word))
-#         if len(synsets) == 0:
-#             num_of_neutral_words +=1
-#         else:
-#             syn = synsets[0]
-#         if syn.pos_score() > syn.neg_score():
-#             num_of_positive_words +=1
-#         elif syn.pos_score() < syn.neg_score():
-#             num_of_negative_words +=1
-#         else:
-#             num_of_neutral_words+=1
-#     return num_of_positive_words, num_of_negative_words , num_of_neutral_words  
-# =============================================================================
+    return num_of_positive_words, num_of_negative_words , num_of_neutral_words  
+
 
 
 # Number of words
@@ -129,12 +113,12 @@ def features(premise):
         #avg_tfidf_feature, max_tfidf_feature = self._tfidf_features(premise)
         
         # positive score, nuetral score,  negative score, compound score
-        negative_score,neutral_score,positive_score,compound_score,num_of_positive_words,num_of_negative_words , num_of_neutral_words = sentiment_analyzer_scores(premise)
+        negative_score,neutral_score,positive_score,compound_score = sentiment_analyzer_scores(premise)
         
         #similarity between topic and claim 
         #similarity_score = similarity_feature(premise, premises_text)
         # Number of postive/negative/neutral words
-        
+        num_of_positive_words,num_of_negative_words , num_of_neutral_words = _sentiment_features(premise)
         return [num_of_words_feature,
                 #similarity_score,
                 negative_score,
@@ -153,6 +137,6 @@ def _instance_features(premises):
 
 _instance_features(claim_corrected_data[7])
 
-for index, row in dataset.iterrows():
-    _instance_features(row['claims.claimCorrectedText'])
+#for index, row in dataset.iterrows():
+#    _instance_features(row['claims.claimCorrectedText'])
 
